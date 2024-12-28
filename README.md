@@ -5,6 +5,9 @@ This project is a dynamic digital rain animation inspired by the Matrix. It disp
 
 ---
 
+## Preview
+![Digital Rain Animation Preview](./public/previewPic.png)
+
 ## Features
 - **Dynamic Animation**: Random raindrops with varying lengths and speeds fall continuously on a grid.
 - **Customizable Grid**: Adjust the number of rows and columns.
@@ -94,10 +97,6 @@ This project is a dynamic digital rain animation inspired by the Matrix. It disp
 - **TypeScript**: Ensures type safety and code reliability.
 - **CSS**: For grid layout and styling.
 
----
-
-## Preview
-![Digital Rain Animation Preview](./public/previewPic.png)
 
 ---
 
