@@ -5,8 +5,10 @@ This project is a dynamic digital rain animation inspired by the Matrix. It disp
 
 ---
 
-## Preview
-![Digital Rain Animation Preview](./public/previewPic.png)
+## Preview 
+[![Digital Rain Animation Preview](./public/previewPic.png)](https://FOGrain.kalehub.com)
+
+**(Live)**: [FOGrain](https://FOGrain.kalehub.com) - click on image of this link
 
 ## Features
 - **Dynamic Animation**: Random raindrops with varying lengths and speeds fall continuously on a grid.
