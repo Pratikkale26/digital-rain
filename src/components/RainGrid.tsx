@@ -14,7 +14,9 @@ export default function RainGrid() {
   const [drops, setDrops] = useState<Drop[]>([]);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
-  const [speed, setSpeed] = useState(100); // Speed in milliseconds
+  const [speed, setSpeed] = useState(50); // Speed in milliseconds
+  const [spawnRate, setSpawnRate] = useState(7); // Default to 7 drops  
+
 
   // Initialize drops
   useEffect(() => {
@@ -22,48 +24,54 @@ export default function RainGrid() {
     setDrops(initialDrops);
   }, [gridSize.cols]);
 
+  useEffect(() => {
+    const initialDrops = Array.from({ length: spawnRate }, () => createNewDrop(gridSize.cols));
+    setDrops(initialDrops);
+  }, [spawnRate, gridSize.cols]);
+
   // Animation loop
   useEffect(() => {
     if (isPaused) return;
-
+  
     const interval = setInterval(() => {
       setDrops((currentDrops) => {
         return currentDrops.map((drop) => {
           // If drop is out of bounds, reset it
-          if (drop.y >= gridSize.rows + drop.length) {
+          if (drop.y >= gridSize.rows) {
             return createNewDrop(gridSize.cols);
           }
           return { ...drop, y: drop.y + drop.speed, colorPhase: (drop.colorPhase + 1) % 360 };
         });
       });
     }, speed);
-
+  
     return () => clearInterval(interval);
-  }, [gridSize, isPaused, speed]);
+  }, [gridSize, isPaused, speed]);  
+  
 
   // Create a new drop with random properties
   function createNewDrop(cols: number): Drop {
     return {
       x: Math.floor(Math.random() * cols),
       y: -Math.floor(Math.random() * 5),
-      length: Math.floor(Math.random() * 3) + 5,
+      length: Math.floor(Math.random() * (6 - 4 + 1)) + 4, // Random length between 4 and 6
       speed: Math.random() * 0.3 + 0.2,
       colorPhase: Math.floor(Math.random() * 360),
     };
-  }
+  }  
 
   // Get the color of a cell based on its position relative to the raindrop
   function getCellColor(row: number, col: number): string {
     for (const drop of drops) {
-      const relativePos = row - Math.floor(drop.y);
-      if (col === drop.x && relativePos >= 0 && relativePos < drop.length) {
-        const opacity = 1 - relativePos / drop.length;
-        // Create a gradient that cycles through colors based on the color phase
+      if (col === drop.x && row >= drop.y && row < drop.y + drop.length) {
+        const opacity = 1 - (row - drop.y) / drop.length; // Adjust opacity for fade effect
         return `hsla(${drop.colorPhase}, 100%, 50%, ${opacity})`;
       }
     }
     return 'transparent';
   }
+  
+  
 
   return (
     <div className="min-h-screen bg-gray-900 flex flex-col items-center py-8">
@@ -88,6 +96,7 @@ export default function RainGrid() {
       {isSettingsOpen && (
         <div className="mb-4 p-4 bg-gray-800 rounded shadow-lg">
           <div className="flex gap-4">
+
             <div>
               <label className="text-white">Rows:</label>
               <input
@@ -99,6 +108,7 @@ export default function RainGrid() {
                 className="ml-2 w-20 px-2 py-1 bg-gray-700 text-white rounded"
               />
             </div>
+
             <div>
               <label className="text-white">Columns:</label>
               <input
@@ -110,15 +120,27 @@ export default function RainGrid() {
                 className="ml-2 w-20 px-2 py-1 bg-gray-700 text-white rounded"
               />
             </div>
+            {/* // Speed */}
             <div>
               <label className="text-white">Speed (ms):</label>
               <input
                 type="number"
                 value={speed}
-                onChange={(e) => setSpeed(Math.max(50, parseInt(e.target.value) || 50))}
+                onChange={(e) => setSpeed(Math.max(25, parseInt(e.target.value) || 50))}
                 className="ml-2 w-20 px-2 py-1 bg-gray-700 text-white rounded"
               />
             </div>
+            {/* // Spawn rate */}
+            <div>
+              <label className="text-white">Spawn Rate:</label>
+              <input
+                type="number"
+                value={spawnRate}
+                onChange={(e) => setSpawnRate(Math.max(1, parseInt(e.target.value) || 1))}
+                className="ml-2 w-20 px-2 py-1 bg-gray-700 text-white rounded"
+              />
+            </div>
+
           </div>
         </div>
       )}
