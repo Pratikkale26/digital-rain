@@ -6,7 +6,6 @@ interface Drop {
   y: number;
   length: number;
   speed: number;
-  colorPhase: number; // Represents the current phase in the gradient
 }
 
 export default function RainGrid() {
@@ -14,16 +13,22 @@ export default function RainGrid() {
   const [drops, setDrops] = useState<Drop[]>([]);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
-  const [speed, setSpeed] = useState(50); // Speed in milliseconds
-  const [spawnRate, setSpawnRate] = useState(7); // Default to 7 drops  
+  const [speed, setSpeed] = useState(24); // Speed in milliseconds
+  const [spawnRate, setSpawnRate] = useState(10); 
+  const [colorPhase, setColorPhase] = useState(0); // Base color phase for all drops
+  const [lightness, setLightness] = useState(20); // Initial lightness (dark)
 
+  // Update the color every 2 seconds
+  useEffect(() => {
+    const colorInterval = setInterval(() => {
+      setColorPhase((prevPhase) => (prevPhase + 60) % 360); // Change the hue every 3 seconds
+      setLightness((prevLightness) => (prevLightness === 30 ? 70 : 30)); // Toggle between dark and light
+    }, 3000);
+
+    return () => clearInterval(colorInterval);
+  }, []);
 
   // Initialize drops
-  useEffect(() => {
-    const initialDrops = Array.from({ length: 7 }, () => createNewDrop(gridSize.cols));
-    setDrops(initialDrops);
-  }, [gridSize.cols]);
-
   useEffect(() => {
     const initialDrops = Array.from({ length: spawnRate }, () => createNewDrop(gridSize.cols));
     setDrops(initialDrops);
@@ -32,50 +37,46 @@ export default function RainGrid() {
   // Animation loop
   useEffect(() => {
     if (isPaused) return;
-  
+
     const interval = setInterval(() => {
-      setDrops((currentDrops) => {
-        return currentDrops.map((drop) => {
-          // If drop is out of bounds, reset it
+      setDrops((currentDrops) =>
+        currentDrops.map((drop) => {
           if (drop.y >= gridSize.rows) {
-            return createNewDrop(gridSize.cols);
+            return createNewDrop(gridSize.cols); // Reset drop
           }
-          return { ...drop, y: drop.y + drop.speed, colorPhase: (drop.colorPhase + 1) % 360 };
-        });
-      });
+          return { ...drop, y: drop.y + drop.speed };
+        })
+      );
     }, speed);
-  
+
     return () => clearInterval(interval);
-  }, [gridSize, isPaused, speed]);  
-  
+  }, [gridSize, isPaused, speed]);
 
   // Create a new drop with random properties
   function createNewDrop(cols: number): Drop {
     return {
       x: Math.floor(Math.random() * cols),
       y: -Math.floor(Math.random() * 5),
-      length: Math.floor(Math.random() * (6 - 4 + 1)) + 4, // Random length between 4 and 6
+      length: 6,
       speed: Math.random() * 0.3 + 0.2,
-      colorPhase: Math.floor(Math.random() * 360),
     };
-  }  
+  }
 
   // Get the color of a cell based on its position relative to the raindrop
   function getCellColor(row: number, col: number): string {
     for (const drop of drops) {
       if (col === drop.x && row >= drop.y && row < drop.y + drop.length) {
-        const opacity = 1 - (row - drop.y) / drop.length; // Adjust opacity for fade effect
-        return `hsla(${drop.colorPhase}, 100%, 50%, ${opacity})`;
+        const positionInDrop = row - drop.y;
+        const adjustedLightness = lightness + (30 / drop.length) * positionInDrop; // Adjust lightness based on drop position
+        return `hsl(${colorPhase}, 100%, ${adjustedLightness}%)`; // Solid color transition
       }
     }
     return 'transparent';
   }
-  
-  
 
   return (
     <div className="min-h-screen bg-gray-900 flex flex-col items-center py-8">
-      {/* Header with title and controls */}
+      {/* Header */}
       <div className="mb-6 flex items-center gap-4">
         <h1 className="text-3xl font-bold text-gray-100">Digital Rain</h1>
         <button
@@ -92,45 +93,39 @@ export default function RainGrid() {
         </button>
       </div>
 
-      {/* Settings panel */}
+      {/* Settings Panel */}
       {isSettingsOpen && (
         <div className="mb-4 p-4 bg-gray-800 rounded shadow-lg">
           <div className="flex gap-4">
-
             <div>
               <label className="text-white">Rows:</label>
               <input
                 type="number"
                 value={gridSize.rows}
                 onChange={(e) =>
-                  setGridSize((prev) => ({ ...prev, rows: Math.max(5, parseInt(e.target.value) || 5) }))
-                }
+                  setGridSize((prev) => ({ ...prev, rows: Math.max(5, parseInt(e.target.value) || 5) }))}
                 className="ml-2 w-20 px-2 py-1 bg-gray-700 text-white rounded"
               />
             </div>
-
             <div>
               <label className="text-white">Columns:</label>
               <input
                 type="number"
                 value={gridSize.cols}
                 onChange={(e) =>
-                  setGridSize((prev) => ({ ...prev, cols: Math.max(5, parseInt(e.target.value) || 5) }))
-                }
+                  setGridSize((prev) => ({ ...prev, cols: Math.max(5, parseInt(e.target.value) || 5) }))}
                 className="ml-2 w-20 px-2 py-1 bg-gray-700 text-white rounded"
               />
             </div>
-            {/* // Speed */}
             <div>
               <label className="text-white">Speed (ms):</label>
               <input
                 type="number"
                 value={speed}
-                onChange={(e) => setSpeed(Math.max(25, parseInt(e.target.value) || 50))}
+                onChange={(e) => setSpeed(Math.max(15, parseInt(e.target.value) || 25))}
                 className="ml-2 w-20 px-2 py-1 bg-gray-700 text-white rounded"
               />
             </div>
-            {/* // Spawn rate */}
             <div>
               <label className="text-white">Spawn Rate:</label>
               <input
@@ -140,14 +135,13 @@ export default function RainGrid() {
                 className="ml-2 w-20 px-2 py-1 bg-gray-700 text-white rounded"
               />
             </div>
-
           </div>
         </div>
       )}
 
-      {/* Grid display */}
+      {/* Grid Display */}
       <div
-        className="grid gap-px bg-gray-800 p-1 rounded-lg shadow-2xl"
+        className="grid gap-px bg-black p-1 rounded-lg shadow-2xl"
         style={{
           gridTemplateColumns: `repeat(${gridSize.cols}, 1fr)`,
           width: `${gridSize.cols * 25}px`,
