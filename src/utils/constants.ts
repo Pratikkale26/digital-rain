@@ -1,0 +1,9 @@
+// Animation constants
+export const ANIMATION_CONSTANTS = {
+  DROP_LENGTH: 6,
+  MIN_SPEED: 25,
+  MAX_SPEED: 500,
+  COLOR_CHANGE_INTERVAL: 3000,
+  DROP_CHECK_INTERVAL: 500,
+  FRAME_RATE: 16 // ~60fps
+};
